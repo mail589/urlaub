@@ -4,6 +4,8 @@ const dateLabel = document.getElementById("dateLabel");
 const summary = document.getElementById("summary");
 const vacationList = document.getElementById("vacationList");
 const otherList = document.getElementById("otherList");
+const vacationCount = document.getElementById("vacationCount");
+const otherCount = document.getElementById("otherCount");
 const refreshBtn = document.getElementById("refreshBtn");
 
 function escapeHtml(value) {
@@ -23,6 +25,8 @@ function renderError(text) {
   summary.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
   renderEmpty(vacationList, "Keine Daten verfügbar.");
   renderEmpty(otherList, "Keine Daten verfügbar.");
+  vacationCount.textContent = "0";
+  otherCount.textContent = "0";
 }
 
 function renderCards(target, items, kind) {
@@ -76,18 +80,24 @@ async function loadData() {
 
     const data = await response.json();
 
-    dateLabel.textContent = `Stand: ${data.date}`;
+    const vacationItems = Array.isArray(data.vacation) ? data.vacation : [];
+    const otherItems = Array.isArray(data.otherAbsences) ? data.otherAbsences : [];
+    const total = Number(data.totalCount || 0);
 
-    if ((data.totalCount || 0) === 0) {
+    dateLabel.textContent = `Stand: ${escapeHtml(data.date || "")}`;
+    vacationCount.textContent = String(vacationItems.length);
+    otherCount.textContent = String(otherItems.length);
+
+    if (total === 0) {
       summary.textContent = "Heute ist niemand abwesend.";
-    } else if (data.totalCount === 1) {
+    } else if (total === 1) {
       summary.textContent = "Heute ist 1 Mitarbeitende:r abwesend.";
     } else {
-      summary.textContent = `Heute sind ${data.totalCount} Mitarbeitende abwesend.`;
+      summary.textContent = `Heute sind ${total} Mitarbeitende abwesend.`;
     }
 
-    renderCards(vacationList, data.vacation, "vacation");
-    renderCards(otherList, data.otherAbsences, "other");
+    renderCards(vacationList, vacationItems, "vacation");
+    renderCards(otherList, otherItems, "other");
   } catch (error) {
     console.error(error);
     dateLabel.textContent = "Fehler beim Laden";
