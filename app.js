@@ -37,7 +37,11 @@ function renderCards(target, items, kind) {
   }
 
   target.innerHTML = items.map((item) => {
-    const fullName = `${item.firstName || ""} ${item.lastName || ""}`.trim() || item.name || "Unbekannt";
+    const fullName =
+      `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
+      item.name ||
+      "Unbekannt";
+
     const badgeClass = kind === "vacation" ? "badge-vacation" : "badge-other";
     const badgeText = kind === "vacation" ? "Urlaub" : (item.type || "Abwesend");
 
@@ -73,7 +77,14 @@ async function loadData() {
     const data = await response.json();
 
     dateLabel.textContent = `Stand: ${data.date}`;
-    summary.textContent = `${data.totalCount} Mitarbeitende heute abwesend`;
+
+    if ((data.totalCount || 0) === 0) {
+      summary.textContent = "Heute ist niemand abwesend.";
+    } else if (data.totalCount === 1) {
+      summary.textContent = "Heute ist 1 Mitarbeitende:r abwesend.";
+    } else {
+      summary.textContent = `Heute sind ${data.totalCount} Mitarbeitende abwesend.`;
+    }
 
     renderCards(vacationList, data.vacation, "vacation");
     renderCards(otherList, data.otherAbsences, "other");
