@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Abwesenheiten heute</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="widget">
+    <div class="widget-header">
+      <div>
+        <h1>Heute abwesend</h1>
+        <div id="dateLabel" class="muted">Lade Daten ...</div>
+      </div>
+      <button id="refreshBtn" class="refresh-btn" type="button">Aktualisieren</button>
+    </div>
+
+    <div id="summary" class="summary">Lade Daten ...</div>
+
+    <div class="section">
+      <div class="section-title">Im Urlaub</div>
+      <div id="vacationList" class="list"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Sonst abwesend</div>
+      <div id="otherList" class="list"></div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+const API_URL = "https://v0-vacation-today-api.vercel.app/api/vacation-today";
+
+const dateLabel = document.getElementById("dateLabel");
+const summary = document.getElementById("summary");
+const vacationList = document.getElementById("vacationList");
+const otherList = document.getElementById("otherList");
+const refreshBtn = document.getElementById("refreshBtn");
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderEmpty(target, text) {
+  target.innerHTML = `<div class="empty">${escapeHtml(text)}</div>`;
+}
+
+function renderError(text) {
+  summary.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
+  renderEmpty(vacationList, "Keine Daten verfügbar.");
+  renderEmpty(otherList, "Keine Daten verfügbar.");
+}
+
+function renderCards(target, items, kind) {
+  if (!items || items.length === 0) {
+    renderEmpty(
+      target,
+      kind === "vacation"
+        ? "Heute ist niemand im Urlaub."
+        : "Heute gibt es keine weiteren Abwesenheiten."
+    );
+    return;
+  }
+
+  target.innerHTML = items.map((item) => {
+    const fullName = `${item.firstName || ""} ${item.lastName || ""}`.trim() || item.name || "Unbekannt";
+    const badgeClass = kind === "vacation" ? "badge-vacation" : "badge-other";
+    const badgeText = kind === "vacation" ? "Urlaub" : (item.type || "Abwesend");
+
+    return `
+      <div class="card">
+        <div class="card-main">
+          <div class="name">${escapeHtml(fullName)}</div>
+          <div class="meta">
+            ${escapeHtml(item.type || "Abwesenheit")} ·
+            bis ${escapeHtml(item.endDate || "unbekannt")} ·
+            Rückkehr ${escapeHtml(item.returnDate || "unbekannt")}
+          </div>
+        </div>
+        <div class="badge ${badgeClass}">${escapeHtml(badgeText)}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadData() {
+  summary.textContent = "Lade Daten ...";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "GET",
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`API-Fehler: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    dateLabel.textContent = `Stand: ${data.date}`;
+    summary.textContent = `${data.totalCount} Mitarbeitende heute abwesend`;
+
+    renderCards(vacationList, data.vacation, "vacation");
+    renderCards(otherList, data.otherAbsences, "other");
+  } catch (error) {
+    console.error(error);
+    dateLabel.textContent = "Fehler beim Laden";
+    renderError("Die Abwesenheiten konnten nicht geladen werden.");
+  }
+}
+
+refreshBtn.addEventListener("click", loadData);
+
+loadData();
+setInterval(loadData, 10 * 60 * 1000);
