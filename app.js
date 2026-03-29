@@ -8,104 +8,54 @@ const vacationCount = document.getElementById("vacationCount");
 const otherCount = document.getElementById("otherCount");
 const refreshBtn = document.getElementById("refreshBtn");
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
 function renderEmpty(target, text) {
-  target.innerHTML = `<div class="empty">${escapeHtml(text)}</div>`;
+  target.innerHTML = `<div class="empty">${text}</div>`;
 }
 
-function renderError(text) {
-  summary.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
-  renderEmpty(vacationList, "Keine Daten verfügbar.");
-  renderEmpty(otherList, "Keine Daten verfügbar.");
-  vacationCount.textContent = "0";
-  otherCount.textContent = "0";
-}
-
-function renderCards(target, items, kind) {
+function renderCards(target, items) {
   if (!items || items.length === 0) {
-    renderEmpty(
-      target,
-      kind === "vacation"
-        ? "Heute ist niemand im Urlaub."
-        : "Heute gibt es keine weiteren Abwesenheiten."
-    );
+    renderEmpty(target, "Keine Einträge");
     return;
   }
 
-  target.innerHTML = items.map((item) => {
-    const fullName =
-      `${item.firstName || ""} ${item.lastName || ""}`.trim() ||
-      item.name ||
-      "Unbekannt";
-
-    const badgeClass = kind === "vacation" ? "badge-vacation" : "badge-other";
-    const badgeText = kind === "vacation" ? "Urlaub" : (item.type || "Abwesend");
-
-    return `
-      <div class="card">
-        <div class="card-main">
-          <div class="name">${escapeHtml(fullName)}</div>
-          <div class="meta">
-            ${escapeHtml(item.type || "Abwesenheit")} ·
-            bis ${escapeHtml(item.endDate || "unbekannt")} ·
-            Rückkehr ${escapeHtml(item.returnDate || "unbekannt")}
-          </div>
-        </div>
-        <div class="badge ${badgeClass}">${escapeHtml(badgeText)}</div>
-      </div>
-    `;
-  }).join("");
+  target.innerHTML = items.map(e => `
+    <div class="card">
+      <strong>${e.name}</strong><br/>
+      ${e.type || ""} bis ${e.endDate || ""}
+    </div>
+  `).join("");
 }
 
 async function loadData() {
   summary.textContent = "Lade Daten ...";
 
   try {
-    const response = await fetch(API_URL, {
-      method: "GET",
-      cache: "no-store"
-    });
+    const res = await fetch(API_URL);
+    const data = await res.json();
 
-    if (!response.ok) {
-      throw new Error(`API-Fehler: ${response.status}`);
-    }
+    dateLabel.textContent = "Stand: " + data.date;
 
-    const data = await response.json();
+    const vacation = data.vacation || [];
+    const other = data.otherAbsences || [];
+    const total = data.totalCount || 0;
 
-    const vacationItems = Array.isArray(data.vacation) ? data.vacation : [];
-    const otherItems = Array.isArray(data.otherAbsences) ? data.otherAbsences : [];
-    const total = Number(data.totalCount || 0);
-
-    dateLabel.textContent = `Stand: ${escapeHtml(data.date || "")}`;
-    vacationCount.textContent = String(vacationItems.length);
-    otherCount.textContent = String(otherItems.length);
+    vacationCount.textContent = vacation.length;
+    otherCount.textContent = other.length;
 
     if (total === 0) {
       summary.textContent = "Heute ist niemand abwesend.";
-    } else if (total === 1) {
-      summary.textContent = "Heute ist 1 Mitarbeitende:r abwesend.";
     } else {
-      summary.textContent = `Heute sind ${total} Mitarbeitende abwesend.`;
+      summary.textContent = total + " Mitarbeitende abwesend";
     }
 
-    renderCards(vacationList, vacationItems, "vacation");
-    renderCards(otherList, otherItems, "other");
-  } catch (error) {
-    console.error(error);
-    dateLabel.textContent = "Fehler beim Laden";
-    renderError("Die Abwesenheiten konnten nicht geladen werden.");
+    renderCards(vacationList, vacation);
+    renderCards(otherList, other);
+
+  } catch (e) {
+    summary.textContent = "Fehler beim Laden";
   }
 }
 
-refreshBtn.addEventListener("click", loadData);
+refreshBtn.onclick = loadData;
 
 loadData();
-setInterval(loadData, 10 * 60 * 1000);

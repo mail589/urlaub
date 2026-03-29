@@ -1,46 +1,80 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abwesenheiten heute</title>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <div class="widget">
-    <div class="topbar">
-      <div>
-        <div class="eyebrow">Personio</div>
-        <h1>Heute abwesend</h1>
-        <div id="dateLabel" class="subline">Lade Daten ...</div>
-      </div>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef3f8;
+}
 
-      <button id="refreshBtn" class="refresh-btn" type="button" aria-label="Aktualisieren">
-        ⟳
-      </button>
-    </div>
+.widget {
+  padding: 12px;
+}
 
-    <div id="summary" class="summary">Lade Daten ...</div>
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    <div class="grid">
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Im Urlaub</h2>
-          <span id="vacationCount" class="count-pill">0</span>
-        </div>
-        <div id="vacationList" class="list"></div>
-      </section>
+.eyebrow {
+  font-size: 11px;
+  color: #2563eb;
+  font-weight: bold;
+}
 
-      <section class="panel">
-        <div class="panel-head">
-          <h2>Sonst abwesend</h2>
-          <span id="otherCount" class="count-pill">0</span>
-        </div>
-        <div id="otherList" class="list"></div>
-      </section>
-    </div>
-  </div>
+h1 {
+  margin: 0;
+  font-size: 20px;
+}
 
-  <script src="./app.js"></script>
-</body>
-</html>
+.subline {
+  font-size: 12px;
+  color: #666;
+}
+
+.refresh-btn {
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.summary {
+  margin: 10px 0;
+  padding: 10px;
+  background: white;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.panel {
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.card {
+  background: #f8fbff;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.empty {
+  font-size: 12px;
+  color: #777;
+}
