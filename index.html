@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abwesenheiten heute</title>
+  <title>Abwesenheiten 7 Tage</title>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #eef3f8;
+      color: #18324d;
     }
 
     .widget {
@@ -19,12 +20,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
     .eyebrow {
       font-size: 11px;
       color: #2563eb;
       font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     h1 {
@@ -35,6 +40,7 @@
     .subline {
       font-size: 12px;
       color: #666;
+      margin-top: 3px;
     }
 
     .refresh-btn {
@@ -44,46 +50,99 @@
       border-radius: 8px;
       padding: 6px 10px;
       cursor: pointer;
+      font-size: 14px;
     }
 
     .summary {
-      margin: 10px 0;
-      padding: 10px;
+      margin: 10px 0 12px;
+      padding: 10px 12px;
       background: white;
       border-radius: 10px;
       font-weight: bold;
     }
 
-    .grid {
+    .day {
+      background: white;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .day-title {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .count {
+      font-size: 12px;
+      color: #2563eb;
+      font-weight: bold;
+      background: #eaf1ff;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .cols {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
 
     .panel {
-      background: white;
-      padding: 10px;
+      background: #f8fbff;
       border-radius: 10px;
+      padding: 10px;
     }
 
-    .panel-head {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
+    .panel h2 {
+      margin: 0 0 8px;
       font-size: 13px;
-      font-weight: bold;
     }
 
     .card {
-      background: #f8fbff;
-      padding: 8px;
+      background: white;
       border-radius: 8px;
+      padding: 8px;
       margin-bottom: 6px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .name {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .meta {
+      color: #666;
+      font-size: 12px;
     }
 
     .empty {
       font-size: 12px;
       color: #777;
+    }
+
+    .error {
+      background: #fff1f0;
+      color: #b42318;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    @media (max-width: 700px) {
+      .cols {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -92,43 +151,22 @@
     <div class="topbar">
       <div>
         <div class="eyebrow">Personio</div>
-        <h1>Heute abwesend</h1>
+        <h1>Kommende 7 Tage</h1>
         <div id="dateLabel" class="subline">Lade Daten ...</div>
       </div>
-
       <button id="refreshBtn" class="refresh-btn" type="button">⟳</button>
     </div>
 
     <div id="summary" class="summary">Lade Daten ...</div>
-
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Im Urlaub</h2>
-          <span id="vacationCount">0</span>
-        </div>
-        <div id="vacationList"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Sonst abwesend</h2>
-          <span id="otherCount">0</span>
-        </div>
-        <div id="otherList"></div>
-      </div>
-    </div>
+    <div id="days"></div>
   </div>
 
   <script>
-    const API_URL = "https://v0-vacation-today-api.vercel.app/api/vacation-today";
+    const API_URL = "https://v0-vacation-today-api.vercel.app/api/vacation-next-7-days";
 
     const dateLabel = document.getElementById("dateLabel");
     const summary = document.getElementById("summary");
-    const vacationList = document.getElementById("vacationList");
-    const otherList = document.getElementById("otherList");
-    const vacationCount = document.getElementById("vacationCount");
-    const otherCount = document.getElementById("otherCount");
+    const daysEl = document.getElementById("days");
     const refreshBtn = document.getElementById("refreshBtn");
 
     function escapeHtml(value) {
@@ -140,21 +178,19 @@
         .replaceAll("'", "&#39;");
     }
 
-    function renderEmpty(target, text) {
-      target.innerHTML = '<div class="empty">' + escapeHtml(text) + '</div>';
-    }
-
-    function renderCards(target, items) {
+    function renderList(items, emptyText) {
       if (!items || items.length === 0) {
-        renderEmpty(target, "Keine Einträge");
-        return;
+        return '<div class="empty">' + escapeHtml(emptyText) + '</div>';
       }
 
-      target.innerHTML = items.map(function (e) {
+      return items.map(function (item) {
         return (
           '<div class="card">' +
-            '<strong>' + escapeHtml(e.name || "Unbekannt") + '</strong><br/>' +
-            escapeHtml(e.type || "") + ' bis ' + escapeHtml(e.endDate || "") +
+            '<div class="name">' + escapeHtml(item.name || "Unbekannt") + '</div>' +
+            '<div class="meta">' +
+              escapeHtml(item.type || "Abwesenheit") + ' · ' +
+              'von ' + escapeHtml(item.startDate || "unbekannt") + ' bis ' + escapeHtml(item.endDate || "unbekannt") +
+            '</div>' +
           '</div>'
         );
       }).join("");
@@ -170,31 +206,36 @@
         }
 
         const data = await res.json();
+        const days = Array.isArray(data.days) ? data.days : [];
 
-        const vacation = Array.isArray(data.vacation) ? data.vacation : [];
-        const other = Array.isArray(data.otherAbsences) ? data.otherAbsences : [];
-        const total = Number(data.totalCount || 0);
+        dateLabel.textContent = "Zeitraum: " + (data.rangeStart || "") + " bis " + (data.rangeEnd || "");
+        summary.textContent = "Abwesenheiten für die kommenden 7 Tage";
 
-        dateLabel.textContent = "Stand: " + (data.date || "");
-        vacationCount.textContent = String(vacation.length);
-        otherCount.textContent = String(other.length);
-
-        if (total === 0) {
-          summary.textContent = "Heute ist niemand abwesend.";
-        } else if (total === 1) {
-          summary.textContent = "Heute ist 1 Mitarbeitende:r abwesend.";
-        } else {
-          summary.textContent = "Heute sind " + total + " Mitarbeitende abwesend.";
-        }
-
-        renderCards(vacationList, vacation);
-        renderCards(otherList, other);
+        daysEl.innerHTML = days.map(function (day) {
+          return (
+            '<div class="day">' +
+              '<div class="day-head">' +
+                '<div class="day-title">' + escapeHtml(day.label || day.date || "") + '</div>' +
+                '<div class="count">' + escapeHtml(String(day.totalCount || 0)) + ' abwesend</div>' +
+              '</div>' +
+              '<div class="cols">' +
+                '<div class="panel">' +
+                  '<h2>Im Urlaub</h2>' +
+                  renderList(day.vacation, "Niemand im Urlaub.") +
+                '</div>' +
+                '<div class="panel">' +
+                  '<h2>Sonst abwesend</h2>' +
+                  renderList(day.otherAbsences, "Keine weiteren Abwesenheiten.") +
+                '</div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join("");
       } catch (e) {
         console.error(e);
         dateLabel.textContent = "Fehler beim Laden";
-        summary.textContent = "Die Abwesenheiten konnten nicht geladen werden.";
-        renderEmpty(vacationList, "Keine Daten verfügbar.");
-        renderEmpty(otherList, "Keine Daten verfügbar.");
+        daysEl.innerHTML = '<div class="error">Die 7-Tage-Ansicht konnte nicht geladen werden.</div>';
+        summary.textContent = "Fehler beim Laden";
       }
     }
 
