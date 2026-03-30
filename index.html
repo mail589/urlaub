@@ -5,242 +5,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Abwesenheiten 7 Tage</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #eef3f8;
-      color: #18324d;
-    }
-
-    .widget {
-      padding: 12px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .eyebrow {
-      font-size: 11px;
-      color: #2563eb;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-
-    .subline {
-      font-size: 12px;
-      color: #666;
-      margin-top: 3px;
-    }
-
-    .refresh-btn {
-      border: none;
-      background: #2563eb;
-      color: white;
-      border-radius: 8px;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .summary {
-      margin: 10px 0 12px;
-      padding: 10px 12px;
-      background: white;
-      border-radius: 10px;
-      font-weight: bold;
-    }
-
-    .day {
-      background: white;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-
-    .day-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .day-title {
-      font-size: 15px;
-      font-weight: bold;
-    }
-
-    .count {
-      font-size: 12px;
-      color: #2563eb;
-      font-weight: bold;
-      background: #eaf1ff;
-      padding: 4px 8px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .cols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .panel {
-      background: #f8fbff;
-      border-radius: 10px;
-      padding: 10px;
-    }
-
-    .panel h2 {
-      margin: 0 0 8px;
-      font-size: 13px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 8px;
-      margin-bottom: 6px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .name {
-      font-weight: bold;
-      margin-bottom: 2px;
-    }
-
-    .meta {
-      color: #666;
-      font-size: 12px;
-    }
-
-    .empty {
-      font-size: 12px;
-      color: #777;
-    }
-
-    .error {
-      background: #fff1f0;
-      color: #b42318;
-      border-radius: 10px;
-      padding: 10px 12px;
-    }
-
-    @media (max-width: 700px) {
-      .cols {
-        grid-template-columns: 1fr;
-      }
-    }
+    body { margin:0; font-family: Arial, sans-serif; background:#eef3f8; color:#18324d; }
+    .widget { padding:12px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .eyebrow { font-size:11px; color:#2563eb; font-weight:bold; text-transform:uppercase; }
+    h1 { margin:0; font-size:20px; }
+    .subline { font-size:12px; color:#666; }
+    .refresh-btn { border:none; background:#2563eb; color:#fff; border-radius:8px; padding:6px 10px; cursor:pointer; }
+    .summary { margin:10px 0; padding:10px; background:#fff; border-radius:10px; font-weight:bold; }
+    .day { background:#fff; border-radius:12px; padding:10px; margin-bottom:10px; }
+    .day-head { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .count { font-size:12px; color:#2563eb; background:#eaf1ff; padding:4px 8px; border-radius:999px; }
+    .cols { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .panel { background:#f8fbff; border-radius:8px; padding:8px; }
+    .card { background:#fff; border-radius:6px; padding:6px; margin-bottom:4px; font-size:12px; }
+    .empty { font-size:12px; color:#777; }
+    @media (max-width:700px){ .cols{ grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <div class="widget">
-    <div class="topbar">
-      <div>
-        <div class="eyebrow">Personio</div>
-        <h1>Kommende 7 Tage</h1>
-        <div id="dateLabel" class="subline">Lade Daten ...</div>
-      </div>
-      <button id="refreshBtn" class="refresh-btn" type="button">⟳</button>
+<div class="widget">
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">Personio</div>
+      <h1>Kommende 7 Tage</h1>
+      <div id="dateLabel" class="subline">Lade Daten ...</div>
     </div>
-
-    <div id="summary" class="summary">Lade Daten ...</div>
-    <div id="days"></div>
+    <button id="refreshBtn" class="refresh-btn">⟳</button>
   </div>
 
-  <script>
-    const API_URL = "https://v0-vacation-today-api.vercel.app/api/vacation-next-7-days";
+  <div id="summary" class="summary">Lade Daten ...</div>
+  <div id="days"></div>
+</div>
 
-    const dateLabel = document.getElementById("dateLabel");
-    const summary = document.getElementById("summary");
-    const daysEl = document.getElementById("days");
-    const refreshBtn = document.getElementById("refreshBtn");
+<script>
+const API_URL = "https://v0-vacation-today-api.vercel.app/api/vacation-next-7-days";
 
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
 
-    function renderList(items, emptyText) {
-      if (!items || items.length === 0) {
-        return '<div class="empty">' + escapeHtml(emptyText) + '</div>';
-      }
+function renderList(items, emptyText){
+  if(!items||items.length===0){return '<div class="empty">'+emptyText+'</div>';}
+  return items.map(i=>'<div class="card"><b>'+esc(i.name)+'</b><br>'+esc(i.type)+' bis '+esc(i.endDate)+'</div>').join("");
+}
 
-      return items.map(function (item) {
-        return (
-          '<div class="card">' +
-            '<div class="name">' + escapeHtml(item.name || "Unbekannt") + '</div>' +
-            '<div class="meta">' +
-              escapeHtml(item.type || "Abwesenheit") + ' · ' +
-              'von ' + escapeHtml(item.startDate || "unbekannt") + ' bis ' + escapeHtml(item.endDate || "unbekannt") +
-            '</div>' +
-          '</div>'
-        );
-      }).join("");
-    }
+async function load(){
+  const summary=document.getElementById("summary");
+  const daysEl=document.getElementById("days");
+  const dateLabel=document.getElementById("dateLabel");
 
-    async function loadData() {
-      summary.textContent = "Lade Daten ...";
+  summary.textContent="Lade Daten ...";
 
-      try {
-        const res = await fetch(API_URL, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error("API-Fehler: " + res.status);
-        }
+  try{
+    const res=await fetch(API_URL);
+    const data=await res.json();
 
-        const data = await res.json();
-        const days = Array.isArray(data.days) ? data.days : [];
+    dateLabel.textContent="Zeitraum: "+data.rangeStart+" bis "+data.rangeEnd;
+    summary.textContent="Abwesenheiten nächste 7 Tage";
 
-        dateLabel.textContent = "Zeitraum: " + (data.rangeStart || "") + " bis " + (data.rangeEnd || "");
-        summary.textContent = "Abwesenheiten für die kommenden 7 Tage";
+    daysEl.innerHTML=data.days.map(d=>`
+      <div class="day">
+        <div class="day-head">
+          <div>${d.label}</div>
+          <div class="count">${d.totalCount}</div>
+        </div>
+        <div class="cols">
+          <div class="panel">
+            <b>Urlaub</b>
+            ${renderList(d.vacation,"-")}
+          </div>
+          <div class="panel">
+            <b>Sonst</b>
+            ${renderList(d.otherAbsences,"-")}
+          </div>
+        </div>
+      </div>
+    `).join("");
 
-        daysEl.innerHTML = days.map(function (day) {
-          return (
-            '<div class="day">' +
-              '<div class="day-head">' +
-                '<div class="day-title">' + escapeHtml(day.label || day.date || "") + '</div>' +
-                '<div class="count">' + escapeHtml(String(day.totalCount || 0)) + ' abwesend</div>' +
-              '</div>' +
-              '<div class="cols">' +
-                '<div class="panel">' +
-                  '<h2>Im Urlaub</h2>' +
-                  renderList(day.vacation, "Niemand im Urlaub.") +
-                '</div>' +
-                '<div class="panel">' +
-                  '<h2>Sonst abwesend</h2>' +
-                  renderList(day.otherAbsences, "Keine weiteren Abwesenheiten.") +
-                '</div>' +
-              '</div>' +
-            '</div>'
-          );
-        }).join("");
-      } catch (e) {
-        console.error(e);
-        dateLabel.textContent = "Fehler beim Laden";
-        daysEl.innerHTML = '<div class="error">Die 7-Tage-Ansicht konnte nicht geladen werden.</div>';
-        summary.textContent = "Fehler beim Laden";
-      }
-    }
+  }catch(e){
+    summary.textContent="Fehler beim Laden";
+  }
+}
 
-    refreshBtn.addEventListener("click", loadData);
-    loadData();
-  </script>
+document.getElementById("refreshBtn").onclick=load;
+load();
+</script>
 </body>
 </html>
